@@ -15,13 +15,12 @@
       };
     in {
       devShells.${system}.default = pkgs.mkShell {
-        buildInputs = with pkgs; [ jdk21_headless gradle oh-my-posh ];
+        buildInputs = with pkgs; [ jdk11_headless gradle oh-my-posh ];
 
         # Create a disposable ZDOTDIR with a small .zshrc that initializes
         # oh-my-posh (with the fetched theme), fastfetch and zoxide.
         shellHook = ''
           echo "Welcome to the OpenEMS development shell!"
-          echo "This shell is based on Leon Hubrich's ZSH Configuration."
           eval "$(oh-my-posh init bash --config "${theme_omz}")"
         '';
       };
