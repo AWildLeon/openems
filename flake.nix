@@ -1,0 +1,44 @@
+{
+  description = "OpenEMS Development Tooling and Build System";
+
+  inputs = { nixpkgs.url = "github:NixOS/nixpkgs/release-25.05"; };
+
+  outputs = { self, nixpkgs }:
+    let
+      system = "x86_64-linux";
+      pkgs = import nixpkgs { inherit system; };
+
+      # Fetch the oh-my-posh theme (from user's provided base)
+      theme_omz = builtins.fetchurl {
+        url = "https://zsh.onlh.de/theme.omp.json";
+        sha256 = "1jd355hilldj4ncf0h28n70qwx43zddzn5xdxamc2y6dmlmxh79c";
+      };
+    in {
+      devShells.${system}.default = pkgs.mkShell {
+        buildInputs = with pkgs; [ jdk21_headless gradle zsh oh-my-posh zoxide ];
+
+        # Create a disposable ZDOTDIR with a small .zshrc that initializes
+        # oh-my-posh (with the fetched theme), fastfetch and zoxide.
+        shellHook = ''
+          echo "Welcome to the OpenEMS development shell!"
+          echo "This shell is based on Leon Hubrich's ZSH Configuration."
+
+          export ZDOTDIR="$PWD/.devshell-zsh"
+          mkdir -p "$ZDOTDIR"
+
+          cat > "$ZDOTDIR/.zshrc" <<'EOF'
+          # OpenEMS devshell .zshrc (auto-generated)
+          eval "$(oh-my-posh init zsh --config "${theme_omz}")"
+          # initialize zoxide with cd command support
+          eval "$(zoxide init zsh --cmd cd)"
+          EOF
+
+          # If we're not already in zsh, exec into it as a login shell so the
+          # generated ZDOTDIR/.zshrc is used.
+          if [ -z "$ZSH_VERSION" ]; then
+            exec ${pkgs.zsh}/bin/zsh -l
+          fi
+        '';
+      };
+    };
+}

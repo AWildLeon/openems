@@ -230,3 +230,6 @@ io.openems.edge.application/c:/
 
 ### Debian ###
 !tools/debian/**
+
+### DevShell ##
+.devshell-zsh/**
