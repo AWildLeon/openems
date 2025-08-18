@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # Prepares a Release by removing the SNAPSHOT tag from version
 #

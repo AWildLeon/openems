@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 JAVA_VERSION=21
 NODE_MAJOR=20

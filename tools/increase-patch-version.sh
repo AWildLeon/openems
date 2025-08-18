@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # Increases the Patch version, i.e. changes 2023.8.1 to 2023.8.2
 

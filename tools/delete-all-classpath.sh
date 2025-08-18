@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Deletes all .classpath files
 # 
 for D in *; do

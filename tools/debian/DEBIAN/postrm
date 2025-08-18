@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # postrm script for openems-edge
 
 set -o errexit

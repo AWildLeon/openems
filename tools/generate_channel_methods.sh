@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 CHANNEL_ID="RELAY_2"
 METHOD="Relay2"

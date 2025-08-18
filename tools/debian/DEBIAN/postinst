@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # postinst script for openems-edge
 #
 # Copyright (C) 2014-2023 Stefan Feilmeier <stefan.feilmeier@fenecon.de>

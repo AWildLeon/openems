@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # This updates the i18n/translate.pot file. This file is the reference for all translations.
 #

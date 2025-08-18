@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Build/Update 'openems-bash' Container for Drone/Woodpecker CI
 
