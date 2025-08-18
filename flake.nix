@@ -27,27 +27,55 @@
         '';
 
         # A convenience package to run the buildEdge Gradle task using JDK21
-        buildEdge = pkgs.runCommandLocal "openems-edge" {
-          buildInputs = [ pkgs.jdk21_headless pkgs.gradle pkgs.unzip pkgs.bash ];
-          src = ./.;
-        }''
-          set -euo pipefail
+        buildEdge = pkgs.writeShellScriptBin "buildEdge" ''
+          #!/usr/bin/env bash
+          # Use the Nix-provided JDK21 and run the local Gradle wrapper with the task
           export JAVA_HOME=${pkgs.jdk21_headless}
           export PATH="$JAVA_HOME/bin:$PATH"
+          exec ./gradlew buildEdge "$@"
+        '';
 
-          cd "$src"
-          # Run Nix-provided Gradle to avoid downloading the Gradle distribution
-          export GRADLE_USER_HOME="$PWD/.gradle-home"
-          gradle buildEdge --no-build-cache --no-daemon
+        # A convenience package to run the buildBackend Gradle task using JDK21
+        buildBackend = pkgs.writeShellScriptBin "buildBackend" ''
+          #!/usr/bin/env bash
+          # Use the Nix-provided JDK21 and run the local Gradle wrapper with the task
+          export JAVA_HOME=${pkgs.jdk21_headless}
+          export PATH="$JAVA_HOME/bin:$PATH"
+          exec ./gradlew buildBackend "$@"
+        '';
 
+        # A convenience package to build the Angular UI using Nix NodeJS
+        buildUI = pkgs.writeShellScriptBin "buildUI" ''
+          #!/usr/bin/env bash
+          set -euo pipefail
+          # Use Nix-provided NodeJS
+          export PATH=${pkgs.nodejs}/bin:$PATH
+
+          # Use default theme 'openems'
+          THEME=openems
+          cd ui
+
+          # Install dependencies and build
+          npm ci
+          node_modules/.bin/ng lint || true
+          node_modules/.bin/ng build -c "openems,openems-edge-prod,prod"
+          echo "Built ui/target"
+        '';
+
+        # Copy a locally-built UI (ui/target) into the nix store
+        buildUIFromLocal = pkgs.runCommand "openems-ui-from-local" {
+          srcDir = ./ui/target;
+        }''
           mkdir -p "$out"
-          # The build task copies the final jar to build/openems-edge.jar
-          if [ -f "$src/build/openems-edge.jar" ]; then
-            cp "$src/build/openems-edge.jar" "$out/"
-          else
-            echo "Expected build/openems-edge.jar not found" >&2
-            exit 1
-          fi
+          cp -r "$srcDir"/* "$out/"
+        '';
+
+        # Copy an existing local backend build artifact into the nix store.
+        buildBackendFromLocal = pkgs.runCommand "openems-backend-from-local" {
+          srcJar = ./build/openems-backend.jar;
+        }''
+          mkdir -p "$out"
+          cp "$srcJar" "$out/"
         '';
       };
 
