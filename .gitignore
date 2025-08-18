@@ -233,3 +233,4 @@ io.openems.edge.application/c:/
 
 ### DevShell ##
 .devshell-zsh/**
+.direnv/**
