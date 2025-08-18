@@ -232,5 +232,4 @@ io.openems.edge.application/c:/
 !tools/debian/**
 
 ### DevShell ##
-.devshell-zsh/**
 .direnv/**
