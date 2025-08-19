@@ -79,51 +79,6 @@
         '';
 
         # compileAll: build backend, edge and UI using local tools (nix run .#compileAll)
-        compileAll = pkgs.writeShellScriptBin "compile-all" ''
-          #!/usr/bin/env bash
-          set -euo pipefail
-
-          export JAVA_HOME=${pkgs.jdk21_headless}
-          export PATH="$JAVA_HOME/bin:$PATH"
-
-          echo "==> Building backend"
-          ./gradlew buildBackend --no-build-cache
-
-          echo "==> Building edge"
-          ./gradlew buildEdge --no-build-cache
-
-          echo "==> Building UI"
-          cd ui
-          npm ci
-          node_modules/.bin/ng lint || true
-          node_modules/.bin/ng build -c "openems,openems-edge-prod,prod"
-          cd ..
-
-          echo "All builds finished"
-        '';
-
-        # tarUiTarget: tar.gz the built ui/target directory (nix run .#tarUiTarget)
-        tarUiTarget = pkgs.writeShellScriptBin "tar-ui-target" ''
-          #!/usr/bin/env bash
-          set -euo pipefail
-
-          UI_DIR="ui/target"
-          OUT_DIR="build"
-          TIMESTAMP=$(date +%Y%m%d%H%M%S)
-          OUT_FILE="$OUT_DIR/openems-ui-$TIMESTAMP.tar.gz"
-
-          if [ ! -d "$UI_DIR" ]; then
-            echo "UI target directory not found: $UI_DIR"
-            echo "Build the UI first (e.g. nix run .#compileAll or nix run .#buildUI)"
-            exit 1
-          fi
-
-          mkdir -p "$OUT_DIR"
-          tar -czf "$OUT_FILE" -C "$UI_DIR" .
-          echo "Created $OUT_FILE"
-        '';
-
-        # startAll: start backend, edge and serve ui/target for local testing (nix run .#startAll)
         startAll = pkgs.writeShellScriptBin "start-all" ''
           #!/usr/bin/env bash
           set -euo pipefail
@@ -131,42 +86,55 @@
           export JAVA_HOME=${pkgs.jdk21_headless}
           export PATH="$JAVA_HOME/bin:$PATH"
 
-          # Start backend
+          mkdir -p build
+
+          cleanup() {
+            echo "Stopping backend (pid=$BACKEND_PID) and edge (pid=$EDGE_PID)"
+            if [ -n "$BACKEND_PID" ]; then
+              kill "$BACKEND_PID" 2>/dev/null || true
+            fi
+            if [ -n "$EDGE_PID" ]; then
+              kill "$EDGE_PID" 2>/dev/null || true
+            fi
+          }
+          trap cleanup INT TERM
+
+          # Start backend (background)
           echo "Starting backend..."
           if [ -f "build/openems-backend.jar" ]; then
-            nohup java -jar build/openems-backend.jar > build/backend.log 2>&1 &
+            java -jar build/openems-backend.jar > build/backend.log 2>&1 &
           else
-            nohup ./gradlew :io.openems.backend.application:run > build/backend.log 2>&1 &
+            ./gradlew :io.openems.backend.application:run > build/backend.log 2>&1 &
           fi
           BACKEND_PID=$!
 
-          # Start edge
+          # Start edge (background)
           echo "Starting edge..."
           if [ -f "build/openems-edge.jar" ]; then
-            nohup java -jar build/openems-edge.jar > build/edge.log 2>&1 &
+            java -jar build/openems-edge.jar > build/edge.log 2>&1 &
           else
-            nohup ./gradlew :io.openems.edge.application:run > build/edge.log 2>&1 &
+            ./gradlew :io.openems.edge.application:run > build/edge.log 2>&1 &
           fi
           EDGE_PID=$!
 
-          # Serve UI
-          if [ -d "ui/target" ]; then
-            echo "Serving UI on http://localhost:4200"
-            (cd ui/target && nohup python3 -m http.server 4200 > ../../build/ui.log 2>&1 &) 
-            UI_PID=$!
+          # Start Angular dev server in foreground so Ctrl-C stops everything
+          if [ -d "ui" ]; then
+            echo "Starting Angular dev server (openems-edge-dev) in foreground on http://localhost:4200"
+            cd ui
+            export PATH=${pkgs.nodejs}/bin:$PATH
+            # Run ng serve in foreground; when it exits, cleanup will run
+            ./node_modules/.bin/ng serve -c openems-edge-dev
+            # Foreground process ended — perform cleanup
+            cleanup
+            cd ..
           else
-            echo "UI not built; run 'nix run .#compileAll' or 'nix run .#buildUI' first"
-            UI_PID=""
+            echo "UI directory not found; not starting UI"
+            # Wait for background processes if UI not started
+            wait $BACKEND_PID $EDGE_PID
           fi
-
-          if [ -z "$UI_PID" ]; then
-            UI_STR="not-started"
-          else
-            UI_STR="$UI_PID"
-          fi
-          echo "Started: backend=$BACKEND_PID edge=$EDGE_PID ui=$UI_STR"
-          echo "Logs: build/backend.log build/edge.log build/ui.log"
         '';
+
+        
       };
 
       devShells.${system}.default = pkgs.mkShell {

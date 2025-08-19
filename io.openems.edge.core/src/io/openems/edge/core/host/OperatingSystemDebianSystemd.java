@@ -311,21 +311,21 @@ public class OperatingSystemDebianSystemd implements OperatingSystem {
 			if (sc.username().isPresent() && sc.password().isPresent()) {
 				// Authenticate with user and password
 				proc = getRuntime().exec(new String[] { //
-						"/bin/bash", "-c", "--", //
+						"/usr/bin/env", "bash", "-c", "--", //
 						"echo " + sc.password().get() + " | " //
 								+ " /usr/bin/sudo -Sk -p '' -u \"" + sc.username().get() + "\" -- " //
 								+ sc.command() });
 			} else if (sc.password().isPresent()) {
 				// Authenticate with password (user must have 'sudo' permissions)
 				proc = getRuntime().exec(new String[] { //
-						"/bin/bash", "-c", "--", //
+						"/usr/bin/env", "bash", "-c", "--", //
 						"echo " + sc.password().get() + " | " //
 								+ " /usr/bin/sudo -Sk -p '' -- " //
 								+ sc.command() });
 			} else {
 				// No authentication: run as current user
 				proc = getRuntime().exec(new String[] { //
-						"/bin/bash", "-c", "--", sc.command() });
+						"/usr/bin/env", "bash", "-c", "--", sc.command() });
 			}
 
 			// get stdout and stderr
