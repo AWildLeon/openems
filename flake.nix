@@ -102,7 +102,17 @@
           # Start backend (background)
           echo "Starting backend..."
           if [ -f "build/openems-backend.jar" ]; then
-            java -jar build/openems-backend.jar > build/backend.log 2>&1 &
+            mkdir -p ./build/backend-openems/config ./build/backend-openems/data
+            java \
+              -Dosgi.clean=true \
+              -Dorg.apache.felix.eventadmin.Timeout=0 \
+              -Dorg.apache.felix.http.host=0.0.0.0 \
+              -Dorg.apache.felix.http.port=8079 \
+              -Dfelix.cm.dir=./build/backend-openems/config \
+              -Dopenems.data.dir=./build/backend-openems/data \
+              -XX:+ExitOnOutOfMemoryError \
+              -XX:+UseZGC -XX:+ZGenerational \
+              -jar build/openems-backend.jar > build/backend.log 2>&1 &
           else
             ./gradlew :io.openems.backend.application:run > build/backend.log 2>&1 &
           fi
@@ -111,7 +121,17 @@
           # Start edge (background)
           echo "Starting edge..."
           if [ -f "build/openems-edge.jar" ]; then
-            java -jar build/openems-edge.jar > build/edge.log 2>&1 &
+            mkdir -p ./build/edge-openems/config ./build/edge-openems/data
+            java \
+              -Dosgi.clean=true \
+              -Dorg.apache.felix.eventadmin.Timeout=0 \
+              -Dorg.apache.felix.http.host=0.0.0.0 \
+              -Dorg.apache.felix.http.port=8080 \
+              -Dfelix.cm.dir=./build/edge-openems/config \
+              -Dopenems.data.dir=./build/edge-openems/data \
+              -XX:+HeapDumpOnOutOfMemoryError \
+              -XX:+ExitOnOutOfMemoryError \
+              -jar build/openems-edge.jar > build/edge.log 2>&1 &
           else
             ./gradlew :io.openems.edge.application:run > build/edge.log 2>&1 &
           fi
