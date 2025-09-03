@@ -1,0 +1,71 @@
+# FoxESS H3 Battery Inverter
+
+This OpenEMS Edge module implements support for the FoxESS H3 hybrid inverter via Modbus TCP communication.
+
+## Features
+
+The FoxESS H3 module provides access to:
+
+### PV String Monitoring
+- PV string 1 & 2 voltage, current, and power measurements
+- Total PV power generation tracking
+
+### Grid Measurements  
+- Three-phase grid voltage, current, and power measurements
+- Grid frequency monitoring
+- Import/export energy counters
+
+### Battery System
+- Battery voltage, current, power, and State of Charge (SoC)
+- Battery temperature monitoring
+- Charge/discharge energy counters
+
+### System Status
+- Inverter and internal temperature monitoring
+- System state information
+- Load energy consumption tracking
+
+## Configuration
+
+The module requires configuration of:
+
+- **Component ID**: Unique identifier for this inverter instance
+- **Modbus ID**: Reference to the Modbus bridge component
+- **Modbus Unit ID**: The Modbus device address (default: 247 for FoxESS H3)
+
+## Modbus Register Map
+
+The implementation reads from the following register ranges using **Modbus Function Code 4 (Read Input Registers)**:
+
+- **31000-31005**: PV string measurements
+- **31006-31015**: Grid measurements  
+- **31032-31033**: Temperature readings
+- **31034-31038**: Battery measurements
+- **31041**: Inverter state
+- **32001+**: Energy counters
+
+## Dependencies
+
+This module requires:
+- A configured Modbus TCP bridge component
+- FoxESS H3 inverter with Modbus TCP enabled
+
+## Usage
+
+1. Configure a Modbus TCP bridge pointing to your FoxESS H3 inverter
+2. Add this FoxESS H3 component and reference the Modbus bridge
+3. The inverter data will be available through OpenEMS channels
+
+## Compatibility
+
+Tested with:
+- FoxESS H3 series hybrid inverters
+- Modbus TCP communication
+
+For other FoxESS models, register addresses may differ and require adaptation.
+
+## Technical Notes
+
+- Uses Modbus Function Code 4 (Read Input Registers) for all data acquisition
+- Implements proper scaling factors for voltage (0.1), current (0.1), and frequency (0.01) values
+- Supports all standard OpenEMS battery inverter interfaces

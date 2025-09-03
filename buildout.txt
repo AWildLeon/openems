@@ -1,0 +1,68 @@
+> Task :io.openems.wrapper:compileJava NO-SOURCE
+> Task :io.openems.wrapper:processResources NO-SOURCE
+> Task :io.openems.wrapper:classes UP-TO-DATE
+> Task :io.openems.wrapper:jar UP-TO-DATE
+> Task :io.openems.common:compileJava UP-TO-DATE
+> Task :io.openems.common:processResources UP-TO-DATE
+> Task :io.openems.common:classes UP-TO-DATE
+> Task :io.openems.common:jar UP-TO-DATE
+> Task :io.openems.edge.common:compileJava UP-TO-DATE
+> Task :io.openems.edge.common:processResources UP-TO-DATE
+> Task :io.openems.edge.common:classes UP-TO-DATE
+> Task :io.openems.edge.common:jar UP-TO-DATE
+> Task :io.openems.edge.battery.api:compileJava
+> Task :io.openems.edge.battery.api:processResources UP-TO-DATE
+> Task :io.openems.edge.battery.api:classes
+> Task :io.openems.edge.battery.api:jar
+> Task :io.openems.edge.ess.api:compileJava UP-TO-DATE
+> Task :io.openems.edge.ess.api:processResources UP-TO-DATE
+> Task :io.openems.edge.ess.api:classes UP-TO-DATE
+> Task :io.openems.edge.ess.api:jar UP-TO-DATE
+> Task :io.openems.edge.batteryinverter.api:compileJava
+> Task :io.openems.edge.batteryinverter.api:processResources
+> Task :io.openems.edge.batteryinverter.api:classes
+> Task :io.openems.edge.batteryinverter.api:jar
+> Task :io.openems.edge.meter.api:compileJava
+> Task :io.openems.edge.meter.api:processResources UP-TO-DATE
+> Task :io.openems.edge.meter.api:classes
+> Task :io.openems.edge.meter.api:jar
+> Task :io.openems.edge.pvinverter.api:compileJava
+> Task :io.openems.edge.pvinverter.api:processResources UP-TO-DATE
+> Task :io.openems.edge.pvinverter.api:classes
+> Task :io.openems.edge.pvinverter.api:jar
+
+> Task :io.openems.edge.bridge.modbus:compileJava FAILED
+/home/leon/openems/io.openems.edge.bridge.modbus/src/io/openems/edge/bridge/modbus/sunspec/batteryinverter/AbstractSunSpecBatteryInverter.java:13: Fehler: Package io.openems.edge.batteryinverter.api ist nicht vorhanden
+import io.openems.edge.batteryinverter.api.ManagedSymmetricBatteryInverter;
+                                          ^
+/home/leon/openems/io.openems.edge.bridge.modbus/src/io/openems/edge/bridge/modbus/sunspec/batteryinverter/AbstractSunSpecBatteryInverter.java:14: Fehler: Package io.openems.edge.batteryinverter.api ist nicht vorhanden
+import io.openems.edge.batteryinverter.api.SymmetricBatteryInverter;
+                                          ^
+/home/leon/openems/io.openems.edge.bridge.modbus/src/io/openems/edge/bridge/modbus/sunspec/batteryinverter/AbstractSunSpecBatteryInverter.java:21: Fehler: Symbol nicht gefunden
+		implements ManagedSymmetricBatteryInverter, SymmetricBatteryInverter, OpenemsComponent {
+		           ^
+  Symbol: Klasse ManagedSymmetricBatteryInverter
+/home/leon/openems/io.openems.edge.bridge.modbus/src/io/openems/edge/bridge/modbus/sunspec/batteryinverter/AbstractSunSpecBatteryInverter.java:21: Fehler: Symbol nicht gefunden
+		implements ManagedSymmetricBatteryInverter, SymmetricBatteryInverter, OpenemsComponent {
+		                                            ^
+  Symbol: Klasse SymmetricBatteryInverter
+4 Fehler
+
+[Incubating] Problems report is available at: file:///home/leon/openems/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':io.openems.edge.bridge.modbus:compileJava'.
+> Compilation failed; see the compiler output below.
+  /home/leon/openems/io.openems.edge.bridge.modbus/src/io/openems/edge/bridge/modbus/sunspec/batteryinverter/AbstractSunSpecBatteryInverter.java:13: Fehler: Package io.openems.edge.batteryinverter.api ist nicht vorhanden
+  import io.openems.edge.batteryinverter.api.ManagedSymmetricBatteryInverter;
+                                            ^
+  4 Fehler
+
+* Try:
+> Check your code and dependencies to fix the compilation error(s)
+> Run with --scan to generate a Build Scan (Powered by Develocity).
+
+BUILD FAILED in 13s
+23 actionable tasks: 10 executed, 13 up-to-date

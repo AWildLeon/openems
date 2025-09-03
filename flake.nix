@@ -9,7 +9,7 @@
     let
       system = "x86_64-linux";
       pkgs = import nixpkgs { inherit system; };
-      
+      src = "/home/leon/openems";
 
       # Fetch the oh-my-posh theme (from user's provided base)
       theme_omz = builtins.fetchurl {
@@ -96,20 +96,23 @@
             if [ -n "$EDGE_PID" ]; then
               kill "$EDGE_PID" 2>/dev/null || true
             fi
+            if [ -n "$EDGE_2_PID" ]; then
+              kill "$EDGE_2_PID" 2>/dev/null || true
+            fi
           }
           trap cleanup INT TERM
 
           # Start backend (background)
           echo "Starting backend..."
           if [ -f "build/openems-backend.jar" ]; then
-            mkdir -p ./build/backend-openems/config ./build/backend-openems/data
+            mkdir -p ${src}/build/backend-openems/config ${src}/build/backend-openems/data
             java \
               -Dosgi.clean=true \
               -Dorg.apache.felix.eventadmin.Timeout=0 \
               -Dorg.apache.felix.http.host=0.0.0.0 \
               -Dorg.apache.felix.http.port=8079 \
-              -Dfelix.cm.dir=./build/backend-openems/config \
-              -Dopenems.data.dir=./build/backend-openems/data \
+              -Dfelix.cm.dir=${src}/build/backend-openems/config \
+              -Dopenems.data.dir=${src}/build/backend-openems/data \
               -XX:+ExitOnOutOfMemoryError \
               -XX:+UseZGC -XX:+ZGenerational \
               -jar build/openems-backend.jar > build/backend.log 2>&1 &
@@ -118,17 +121,19 @@
           fi
           BACKEND_PID=$!
 
+          sleep 10 # Give backend time to start
+
           # Start edge (background)
           echo "Starting edge..."
           if [ -f "build/openems-edge.jar" ]; then
-            mkdir -p ./build/edge-openems/config ./build/edge-openems/data
+            mkdir -p ${src}/build/edge-openems/config ${src}/build/edge-openems/data
             java \
               -Dosgi.clean=true \
               -Dorg.apache.felix.eventadmin.Timeout=0 \
               -Dorg.apache.felix.http.host=0.0.0.0 \
               -Dorg.apache.felix.http.port=8080 \
-              -Dfelix.cm.dir=./build/edge-openems/config \
-              -Dopenems.data.dir=./build/edge-openems/data \
+              -Dfelix.cm.dir=${src}/build/edge-openems/config \
+              -Dopenems.data.dir=${src}/build/edge-openems/data \
               -XX:+HeapDumpOnOutOfMemoryError \
               -XX:+ExitOnOutOfMemoryError \
               -jar build/openems-edge.jar > build/edge.log 2>&1 &
@@ -137,20 +142,42 @@
           fi
           EDGE_PID=$!
 
+                    # Start edge (background)
+          echo "Starting edge2..."
+          if [ -f "build/openems-edge.jar" ]; then
+            mkdir -p ${src}/build/edge-openems-2/config ${src}/build/edge-openems-2/data
+            java \
+              -Dosgi.clean=true \
+              -Dorg.apache.felix.eventadmin.Timeout=0 \
+              -Dorg.apache.felix.http.host=0.0.0.0 \
+              -Dorg.apache.felix.http.port=18181 \
+              -Dorg.osgi.service.http.port=18181 \
+              -Dfelix.cm.dir=${src}/build/edge-openems-2/config \
+              -Dopenems.data.dir=${src}/build/edge-openems-2/data \
+              -XX:+HeapDumpOnOutOfMemoryError \
+              -XX:+ExitOnOutOfMemoryError \
+              -jar build/openems-edge.jar > build/edge2.log 2>&1 &
+          else
+            # run gradle with JVM options for edge2 so it binds to 18181
+            GRADLE_OPTS="-Dorg.apache.felix.http.port=18181 -Dorg.osgi.service.http.port=18181 -Dfelix.cm.dir=${src}/build/edge-openems-2/config -Dopenems.data.dir=${src}/build/edge-openems-2/data" \
+              ./gradlew :io.openems.edge.application:run > build/edge2.log 2>&1 &
+          fi
+          EDGE_2_PID=$!
+
           # Start Angular dev server in foreground so Ctrl-C stops everything
           if [ -d "ui" ]; then
-            echo "Starting Angular dev server (openems-edge-dev) in foreground on http://localhost:4200"
+            echo "Starting Angular dev server (openems-backend-dev) in foreground on http://localhost:4200"
             cd ui
             export PATH=${pkgs.nodejs}/bin:$PATH
             # Run ng serve in foreground; when it exits, cleanup will run
-            ./node_modules/.bin/ng serve -c openems-edge-dev
+            ./node_modules/.bin/ng serve -c openems-backend-dev
             # Foreground process ended — perform cleanup
             cleanup
             cd ..
           else
             echo "UI directory not found; not starting UI"
             # Wait for background processes if UI not started
-            wait $BACKEND_PID $EDGE_PID
+            wait $BACKEND_PID $EDGE_PID $EDGE_2_PID
           fi
         '';
 

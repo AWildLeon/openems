@@ -1,0 +1,9 @@
+*~
+.*.swp
+/.gradle/
+/build/
+/bin/
+/bin_test/
+/generated/
+/.settings/
+/target/

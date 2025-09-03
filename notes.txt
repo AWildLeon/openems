@@ -1,0 +1,4 @@
+http://localhost:18181/system/console/configMgr Edge #1
+http://localhost:8080/system/con^sole/configMgr Edge #12
+
+http://localhost:8079/system/console/configMgr Backend
