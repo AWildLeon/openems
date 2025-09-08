@@ -13,6 +13,9 @@ import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
 import org.osgi.service.component.annotations.ReferencePolicyOption;
+import org.osgi.service.event.Event;
+import org.osgi.service.event.EventHandler;
+import org.osgi.service.event.propertytypes.EventTopics;
 import org.osgi.service.metatype.annotations.Designate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,8 +30,10 @@ import io.openems.edge.bridge.modbus.api.ModbusProtocol;
 import io.openems.edge.bridge.modbus.api.element.SignedWordElement;
 import io.openems.edge.bridge.modbus.api.element.UnsignedWordElement;
 import io.openems.edge.bridge.modbus.api.task.FC4ReadInputRegistersTask;
+import io.openems.edge.common.channel.IntegerReadChannel;
 import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
+import io.openems.edge.common.event.EdgeEventConstants;
 import io.openems.edge.common.modbusslave.ModbusSlave;
 import io.openems.edge.common.modbusslave.ModbusSlaveTable;
 import io.openems.edge.common.sum.GridMode;
@@ -40,8 +45,11 @@ import io.openems.edge.common.taskmanager.Priority;
 		immediate = true, //
 		configurationPolicy = ConfigurationPolicy.REQUIRE //
 )
+@EventTopics({ //
+		EdgeEventConstants.TOPIC_CYCLE_AFTER_PROCESS_IMAGE //
+})
 public class BatteryInverterFoxessH3Impl extends AbstractOpenemsModbusComponent
-		implements BatteryInverterFoxessH3, SymmetricBatteryInverter, ModbusComponent, OpenemsComponent, ModbusSlave {
+		implements BatteryInverterFoxessH3, SymmetricBatteryInverter, ModbusComponent, OpenemsComponent, ModbusSlave, EventHandler {
 
 	private final Logger log = LoggerFactory.getLogger(BatteryInverterFoxessH3Impl.class);
 
@@ -66,6 +74,8 @@ public class BatteryInverterFoxessH3Impl extends AbstractOpenemsModbusComponent
 				"Modbus", config.modbus_id())) {
 			return;
 		}
+		// Initial GridMode will be set by updateGridMode() after first Modbus read
+		this._setGridMode(GridMode.UNDEFINED);
 	}
 
 	@Override
@@ -123,7 +133,7 @@ public class BatteryInverterFoxessH3Impl extends AbstractOpenemsModbusComponent
 								SCALE_FACTOR_MINUS_1), //
 						m(BatteryInverterFoxessH3.ChannelId.BATTERY_CURRENT, new SignedWordElement(31035),
 								SCALE_FACTOR_MINUS_1), //
-						m(BatteryInverterFoxessH3.ChannelId.BATTERY_POWER, new SignedWordElement(31036)), //
+						m(SymmetricBatteryInverter.ChannelId.ACTIVE_POWER, new SignedWordElement(31036)), // Standard channel mapping
 						m(BatteryInverterFoxessH3.ChannelId.BATTERY_TEMPERATURE, new SignedWordElement(31037),
 								SCALE_FACTOR_MINUS_1), //
 						m(BatteryInverterFoxessH3.ChannelId.BATTERY_SOC, new SignedWordElement(31038))), //
@@ -191,5 +201,69 @@ public class BatteryInverterFoxessH3Impl extends AbstractOpenemsModbusComponent
 	@Reference(policy = ReferencePolicy.STATIC, policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MANDATORY)
 	protected void setModbus(BridgeModbus modbus) {
 		super.setModbus(modbus);
+	}
+
+	@Override
+	public void handleEvent(Event event) {
+		switch (event.getTopic()) {
+		case EdgeEventConstants.TOPIC_CYCLE_AFTER_PROCESS_IMAGE:
+			this.updateGridMode();
+			break;
+		}
+	}
+
+	/**
+	 * Updates the GridMode channel based on the FoxESS inverter state.
+	 * This method is called after each Modbus cycle to automatically 
+	 * determine the correct grid mode from the device status.
+	 */
+	private void updateGridMode() {
+		// Get the inverter state value from register 31041
+		IntegerReadChannel inverterStateChannel = this.channel(BatteryInverterFoxessH3.ChannelId.INVERTER_STATE);
+		var inverterStateOpt = inverterStateChannel.value().asOptional();
+		
+		if (inverterStateOpt.isPresent()) {
+			var inverterState = inverterStateOpt.get();
+			GridMode gridMode;
+			
+			// Map FoxESS H3 inverter states to OpenEMS GridMode
+			// Based on FoxESS H3 documentation and nathanmarlor/foxess_modbus project
+			switch (inverterState) {
+			case 0: // Waiting - inverter is waiting to start
+				gridMode = GridMode.UNDEFINED;
+				this.logInfo(this.log, "FoxESS H3 Waiting -> UNDEFINED");
+				break;
+			case 1: // Checking - self-check/start-up process
+				gridMode = GridMode.UNDEFINED;
+				this.logInfo(this.log, "FoxESS H3 Checking -> UNDEFINED");
+				break;
+			case 2: // Fault - recoverable fault condition (as seen in your log)
+				gridMode = GridMode.UNDEFINED;
+				this.logWarn(this.log, "FoxESS H3 Fault mode (state: " + inverterState + ") -> UNDEFINED");
+				break;
+			case 3: // On Grid - normal grid-tied operation
+				gridMode = GridMode.ON_GRID;
+				this.logDebug(this.log, "FoxESS H3 On Grid -> ON_GRID");
+				break;
+			case 4: // Off Grid / EPS - emergency power supply mode
+				gridMode = GridMode.OFF_GRID;
+				this.logInfo(this.log, "FoxESS H3 Off Grid/EPS mode -> OFF_GRID");
+				break;
+			case 5: // Unrecoverable Fault - critical error
+				gridMode = GridMode.UNDEFINED;
+				this.logWarn(this.log, "FoxESS H3 Unrecoverable Fault (state: " + inverterState + ") -> UNDEFINED");
+				break;
+			default:
+				gridMode = GridMode.UNDEFINED;
+				this.logWarn(this.log, "FoxESS H3 unknown inverter state: " + inverterState + " -> UNDEFINED");
+				break;
+			}
+			
+			this._setGridMode(gridMode);
+		} else {
+			// No inverter state available - communication issue or device not responding
+			this._setGridMode(GridMode.UNDEFINED);
+			this.logDebug(this.log, "FoxESS H3 inverter state not available -> UNDEFINED");
+		}
 	}
 }
