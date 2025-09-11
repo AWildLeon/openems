@@ -154,7 +154,6 @@
 	bnd.identity;id='io.openems.edge.io.siemenslogo',\
 	bnd.identity;id='io.openems.edge.io.wago',\
 	bnd.identity;id='io.openems.edge.io.weidmueller',\
-	bnd.identity;id='io.openems.edge.kaco.blueplanet.hybrid10',\
 	bnd.identity;id='io.openems.edge.katek.edcom',\
 	bnd.identity;id='io.openems.edge.kostal',\
 	bnd.identity;id='io.openems.edge.meter.abb',\
@@ -348,7 +347,6 @@
 	io.openems.edge.io.siemenslogo;version=snapshot,\
 	io.openems.edge.io.wago;version=snapshot,\
 	io.openems.edge.io.weidmueller;version=snapshot,\
-	io.openems.edge.kaco.blueplanet.hybrid10;version=snapshot,\
 	io.openems.edge.katek.edcom;version=snapshot,\
 	io.openems.edge.kostal;version=snapshot,\
 	io.openems.edge.meter.abb;version=snapshot,\

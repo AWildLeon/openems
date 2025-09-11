@@ -87,75 +87,53 @@ public class MeterFoxessH3Impl extends AbstractOpenemsModbusComponent
 	protected ModbusProtocol defineModbusProtocol() {
 		var modbusProtocol = new ModbusProtocol(this,
 
-				// Grid measurements - voltage and frequency
+				// Grid measurements - voltage (as per official FoxESS H3 register map)
 				new FC4ReadInputRegistersTask(31006, Priority.HIGH, //
-						m(MeterFoxessH3.ChannelId.GRID_VOLTAGE_R, new SignedWordElement(31006),
-								SCALE_FACTOR_MINUS_1), //
 						m(ElectricityMeter.ChannelId.VOLTAGE_L1, new SignedWordElement(31006),
 								SCALE_FACTOR_MINUS_1), //
-						m(MeterFoxessH3.ChannelId.GRID_VOLTAGE_S, new SignedWordElement(31007),
-								SCALE_FACTOR_MINUS_1), //
 						m(ElectricityMeter.ChannelId.VOLTAGE_L2, new SignedWordElement(31007),
-								SCALE_FACTOR_MINUS_1), //
-						m(MeterFoxessH3.ChannelId.GRID_VOLTAGE_T, new SignedWordElement(31008),
 								SCALE_FACTOR_MINUS_1), //
 						m(ElectricityMeter.ChannelId.VOLTAGE_L3, new SignedWordElement(31008),
 								SCALE_FACTOR_MINUS_1)), //
 
-				// Grid measurements - current
-				new FC4ReadInputRegistersTask(31009, Priority.HIGH, //
-						m(MeterFoxessH3.ChannelId.GRID_CURRENT_R, new SignedWordElement(31009),
+				// Grid measurements - current (following FoxESS register sequence)
+				new FC4ReadInputRegistersTask(31026, Priority.HIGH, //
+						m(ElectricityMeter.ChannelId.CURRENT_L1, new SignedWordElement(31026),
 								SCALE_FACTOR_MINUS_1), //
-						m(MeterFoxessH3.ChannelId.GRID_CURRENT_S, new SignedWordElement(31010),
+						m(ElectricityMeter.ChannelId.CURRENT_L2, new SignedWordElement(31027),
 								SCALE_FACTOR_MINUS_1), //
-						m(MeterFoxessH3.ChannelId.GRID_CURRENT_T, new SignedWordElement(31011),
+						m(ElectricityMeter.ChannelId.CURRENT_L3, new SignedWordElement(31028),
 								SCALE_FACTOR_MINUS_1)), //
 
 				// Grid measurements - power and frequency
-				new FC4ReadInputRegistersTask(31012, Priority.HIGH, //
-						m(MeterFoxessH3.ChannelId.GRID_POWER_R, new SignedWordElement(31012)), //
-						m(MeterFoxessH3.ChannelId.GRID_POWER_S, new SignedWordElement(31013)), //
-						m(MeterFoxessH3.ChannelId.GRID_POWER_T, new SignedWordElement(31014)), //
-						m(MeterFoxessH3.ChannelId.GRID_FREQUENCY, new SignedWordElement(31015),
-								SCALE_FACTOR_MINUS_2), //
-						m(ElectricityMeter.ChannelId.FREQUENCY, new SignedWordElement(31015),
+				new FC4ReadInputRegistersTask(31014, Priority.HIGH, //
+						m(ElectricityMeter.ChannelId.ACTIVE_POWER_L1, new SignedWordElement(31014)), //
+						m(ElectricityMeter.ChannelId.ACTIVE_POWER_L2, new SignedWordElement(31015)), //
+						m(ElectricityMeter.ChannelId.ACTIVE_POWER_L3, new SignedWordElement(31016)), //
+						m(ElectricityMeter.ChannelId.FREQUENCY, new SignedWordElement(31017),
 								SCALE_FACTOR_MINUS_2)), //
 
 				// Smart meter energy counters - import
-				new FC4ReadInputRegistersTask(32013, Priority.LOW, //
-						m(MeterFoxessH3.ChannelId.SMARTMETER_IMPORT_TOTAL, new SignedWordElement(32013),
+				new FC4ReadInputRegistersTask(32014, Priority.LOW, //
+						m(MeterFoxessH3.ChannelId.SMARTMETER_IMPORT_TOTAL, new SignedWordElement(32014),
 								SCALE_FACTOR_MINUS_1), //
-						m(MeterFoxessH3.ChannelId.SMARTMETER_IMPORT_DAILY, new SignedWordElement(32014),
+						m(MeterFoxessH3.ChannelId.SMARTMETER_IMPORT_DAILY, new SignedWordElement(32015),
 								SCALE_FACTOR_MINUS_1)), //
 
 				// Smart meter energy counters - export
-				new FC4ReadInputRegistersTask(32016, Priority.LOW, //
-						m(MeterFoxessH3.ChannelId.SMARTMETER_EXPORT_TOTAL, new SignedWordElement(32016),
+				new FC4ReadInputRegistersTask(32017, Priority.LOW, //
+						m(MeterFoxessH3.ChannelId.SMARTMETER_EXPORT_TOTAL, new SignedWordElement(32017),
 								SCALE_FACTOR_MINUS_1), //
-						m(MeterFoxessH3.ChannelId.SMARTMETER_EXPORT_DAILY, new SignedWordElement(32017),
+						m(MeterFoxessH3.ChannelId.SMARTMETER_EXPORT_DAILY, new SignedWordElement(32018),
 								SCALE_FACTOR_MINUS_1)), //
 
 				// Load energy counters
-				new FC4ReadInputRegistersTask(32022, Priority.LOW, //
-						m(MeterFoxessH3.ChannelId.LOAD_ENERGY_TOTAL, new SignedWordElement(32022),
+				new FC4ReadInputRegistersTask(32023, Priority.LOW, //
+						m(MeterFoxessH3.ChannelId.LOAD_ENERGY_TOTAL, new SignedWordElement(32023),
 								SCALE_FACTOR_MINUS_1), //
-						m(MeterFoxessH3.ChannelId.LOAD_ENERGY_DAILY, new SignedWordElement(32023),
+						m(MeterFoxessH3.ChannelId.LOAD_ENERGY_DAILY, new SignedWordElement(32024),
 								SCALE_FACTOR_MINUS_1)) //
 		);
-
-		// Add tasks for the standard ElectricityMeter channels
-		modbusProtocol.addTask(new FC4ReadInputRegistersTask(31009, Priority.HIGH, //
-				m(ElectricityMeter.ChannelId.CURRENT_L1, new SignedWordElement(31009),
-						SCALE_FACTOR_MINUS_1), //
-				m(ElectricityMeter.ChannelId.CURRENT_L2, new SignedWordElement(31010),
-						SCALE_FACTOR_MINUS_1), //
-				m(ElectricityMeter.ChannelId.CURRENT_L3, new SignedWordElement(31011),
-						SCALE_FACTOR_MINUS_1)));
-
-		modbusProtocol.addTask(new FC4ReadInputRegistersTask(31012, Priority.HIGH, //
-				m(ElectricityMeter.ChannelId.ACTIVE_POWER_L1, new SignedWordElement(31012)), //
-				m(ElectricityMeter.ChannelId.ACTIVE_POWER_L2, new SignedWordElement(31013)), //
-				m(ElectricityMeter.ChannelId.ACTIVE_POWER_L3, new SignedWordElement(31014))));
 
 		// Apply inversion if configured
 		if (this.invert) {
