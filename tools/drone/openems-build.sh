@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 JAVA_VERSION=21
-NODE_MAJOR=20
+NODE_MAJOR=22
 
 # Build/Update 'openems-build' Container for Drone/Woodpecker CI
 
