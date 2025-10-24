@@ -1,0 +1,25 @@
+# Battery FoxESS H3
+
+This module implements a Battery component for the FoxESS H3 system that reads battery data from the FoxESS H3 Battery Inverter.
+
+## Features
+
+- Reads battery data (SOC, voltage, current, temperature) from FoxESS H3 Battery Inverter
+- Maps data to standard OpenEMS Battery interface channels
+- Provides battery protection limits and state management
+- Integrates with OpenEMS ESS systems for complete energy management
+
+## Configuration
+
+- **Battery Inverter-ID**: Reference to the FoxESS H3 Battery Inverter component
+- **Capacity**: Battery capacity in Wh
+- **Cell Voltage Limits**: Min/max cell voltage limits for protection
+- **Current Limits**: Max charge/discharge current limits
+
+## Usage
+
+This component must be used together with:
+1. `Battery-Inverter.FoxESS.H3` - for reading Modbus data from the FoxESS H3 system
+2. An ESS component that uses both the battery and battery inverter
+
+The battery component automatically pulls data from the battery inverter and provides it in the standard Battery interface format for use by ESS systems and the OpenEMS UI.

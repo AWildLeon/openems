@@ -1,0 +1,24 @@
+Bundle-Name: OpenEMS Edge Battery FoxESS H3
+Bundle-Vendor: OpenEMS Association e.V.
+Bundle-License: https://opensource.org/licenses/EPL-2.0
+Bundle-Version: 1.0.0.${tstamp}
+Bundle-Description: \
+	OpenEMS Edge implementation for FoxESS H3 Battery that reads data from the FoxESS H3 Battery Inverter
+
+-buildpath: \
+	${buildpath},\
+	io.openems.common,\
+	io.openems.edge.battery.api,\
+	io.openems.edge.batteryinverter.api,\
+	io.openems.edge.batteryinverter.foxess.h3,\
+	io.openems.edge.bridge.modbus,\
+	io.openems.edge.common
+
+-testpath: \
+	${testpath},\
+	io.openems.edge.battery.api,\
+	io.openems.edge.bridge.modbus,\
+	io.openems.edge.common
+
+javac.source: 17
+javac.target: 17
